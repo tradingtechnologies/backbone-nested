@@ -20,6 +20,9 @@
   }
 }(this, function(_, Backbone) {
   'use strict';
+  
+  var regexNotDotOrBrackets = /[^\.\[\]]+/g;
+  var regexAllDigits = /^\d+$/;
 
 
   Backbone.NestedModel = Backbone.Model.extend({
@@ -185,7 +188,7 @@
         attrStr = Backbone.NestedModel.createAttrStr(aryPath);
         this.trigger('remove:' + attrStr, this, oldEl);
         for (var aryCount = aryPath.length; aryCount >= 1; aryCount--) {
-          attrStr = Backbone.NestedModel.createAttrStr(_.first(aryPath, aryCount));
+          attrStr = Backbone.NestedModel.createAttrStr(_.take(aryPath, aryCount));
           this.trigger('change:' + attrStr, this, oldEl);
         }
         this.trigger('change', this, oldEl);
@@ -326,10 +329,10 @@
 
       if (_.isString(attrStrOrPath)){
         // TODO this parsing can probably be more efficient
-        path = (attrStrOrPath === '') ? [''] : attrStrOrPath.match(/[^\.\[\]]+/g);
+        path = (attrStrOrPath === '') ? [''] : attrStrOrPath.match(regexNotDotOrBrackets);
         path = _.map(path, function(val){
           // convert array accessors to numbers
-          return val.match(/^\d+$/) ? parseInt(val, 10) : val;
+          return val.match(regexAllDigits) ? parseInt(val, 10) : val;
         });
       } else {
         path = attrStrOrPath;
@@ -340,7 +343,7 @@
 
     createAttrStr: function(attrPath){
       var attrStr = attrPath[0];
-      _.each(_.rest(attrPath), function(attr){
+      _.each(_.tail(attrPath), function(attr){
         attrStr += _.isNumber(attr) ? ('[' + attr + ']') : ('.' + attr);
       });
 
